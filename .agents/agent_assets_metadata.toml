@@ -1,0 +1,31 @@
+uploads = []
+
+[[generated]]
+id = "jqCJHcxSnUjapiz04iVbH"
+uri = "file://artifacts/bluepeak/public/images/agriculture.png"
+type = "image"
+title = "Agriculture export grains spices fruits"
+
+[[generated]]
+id = "Y4tkg0sdLTlCy751d3SWM"
+uri = "file://artifacts/bluepeak/public/images/leather.png"
+type = "image"
+title = "Premium leather bags wallets shoes"
+
+[[generated]]
+id = "5g0QuC3ApExPOSfF8RAF3"
+uri = "file://artifacts/bluepeak/public/images/textiles.png"
+type = "image"
+title = "Textiles fabrics garments export"
+
+[[generated]]
+id = "gMjxY7GFXGg9sJttO0Uz1"
+uri = "file://artifacts/bluepeak/public/images/chemicals.png"
+type = "image"
+title = "Chemicals industrial containers lab"
+
+[[outputs]]
+id = "akssk8gBqbXXKGN_H62T8"
+uri = "file://downloads/bluepeak-s3-site.zip"
+type = "unspecified"
+title = "BluePeak — Static Site (ready for S3)"
