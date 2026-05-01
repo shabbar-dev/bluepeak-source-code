@@ -1,13 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Globe2, Anchor, Award, Clock } from "lucide-react";
+import { DollarSign, Calendar, Zap, ThumbsUp, Shield } from "lucide-react";
 
 export function About() {
   const stats = [
-    { value: "45+", label: "Countries Served", icon: Globe2 },
-    { value: "2M+", label: "Tons Shipped", icon: Anchor },
-    { value: "15+", label: "Years Experience", icon: Award },
-    { value: "99%", label: "On-Time Delivery", icon: Clock },
+    { value: "Competitive", label: "Pricing", icon: DollarSign },
+    { value: "Flexible", label: "Payment Terms", icon: Calendar },
+    { value: "100%", label: "Flexibility", icon: Zap },
+    // { value: "98%", label: "Client Satisfaction", icon: ThumbsUp },
+    { value: "Certified", label: "Quality Assurance", icon: Shield },
   ];
 
   return (

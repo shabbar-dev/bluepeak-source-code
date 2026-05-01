@@ -312,8 +312,8 @@ function ResponsiveCamera() {
     // Move camera further on narrow viewports so globe always fits
     const aspect = size.width / Math.max(size.height, 1);
     let z = 6.2;
-    if (size.width < 480) z = 7.4;
-    else if (size.width < 768) z = 6.8;
+    if (size.width < 480) z = 7.8;
+    else if (size.width < 768) z = 7.0;
     if (aspect < 0.7) z += 0.8;
     camera.position.set(0, 0, z);
     camera.updateProjectionMatrix();
@@ -323,22 +323,31 @@ function ResponsiveCamera() {
 
 export function Hero() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
-    <section className="relative w-full min-h-[100dvh] flex items-center pt-20 pb-16 overflow-hidden">
-      <div className="absolute inset-0 z-0">
+    <section className="relative w-full min-h-[100dvh] flex items-center pt-40 pb-16 overflow-hidden">
+      <div className={`absolute left-0 right-0 bottom-0 z-0 ${isMobile ? 'pointer-events-none' : ''}`} style={{ top: '80px' }}>
         {mounted && (
           <GlobeErrorBoundary fallback={<GlobeFallback />}>
             <Suspense fallback={<GlobeFallback />}>
-              <Canvas camera={{ position: [0, 0, 6.5], fov: 45 }} dpr={[1, 2]}>
+              <Canvas camera={{ position: [0, 0, 6.5], fov: 45 }} dpr={[1, 2]} className={isMobile ? 'pointer-events-none' : ''}>
                 <ResponsiveCamera />
                 <ambientLight intensity={0.65} />
                 <pointLight position={[10, 10, 10]} intensity={1.2} color="#00f0ff" />
                 <pointLight position={[-10, -6, -8]} intensity={0.8} color="#7c5cff" />
                 <Stars radius={120} depth={60} count={3500} factor={4} saturation={0} fade speed={1} />
                 <Globe />
-                <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.3} />
+                {!isMobile && (
+                  <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.3} />
+                )}
               </Canvas>
             </Suspense>
           </GlobeErrorBoundary>
@@ -346,8 +355,14 @@ export function Hero() {
       </div>
 
       {/* Soft vignette so text stays readable */}
-      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_left,_rgba(2,8,19,0.85),_transparent_60%)]" />
-
+      <div className="absolute left-0 right-0 bottom-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_left,_rgba(2,8,19,0.85),_transparent_60%)]" style={{ top: '80px' }} />      
+      {/* Mobile touch restriction overlay - blocks pointer events on top/bottom */}
+      {isMobile && (
+        <>
+          <div className="absolute top-0 left-0 right-0 h-1/3 z-10 pointer-events-auto" style={{ background: 'transparent' }} />
+          <div className="absolute bottom-0 left-0 right-0 h-1/4 z-10 pointer-events-auto" style={{ background: 'transparent' }} />
+        </>
+      )}
       <div className="container relative z-10 mx-auto px-4 pointer-events-none">
         <div className="max-w-3xl">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]">
