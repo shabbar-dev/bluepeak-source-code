@@ -25,6 +25,9 @@ jobs:
         run: pnpm install
 
       - name: Build project
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+          VITE_CONTACT_TO_EMAIL: ${{ secrets.VITE_CONTACT_TO_EMAIL || vars.VITE_CONTACT_TO_EMAIL }}
         run: |
           PORT=3000 BASE_PATH=/ pnpm --filter @workspace/bluepeak run build
 

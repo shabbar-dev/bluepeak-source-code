@@ -239,6 +239,7 @@ function MovingTransport({
 
 function Globe() {
   const groupRef = useRef<THREE.Group>(null);
+  
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.0015;
@@ -262,28 +263,28 @@ function Globe() {
     <group ref={groupRef}>
       {/* Filled globe surface */}
       <mesh>
-        <sphereGeometry args={[RADIUS, 64, 64]} />
+        <sphereGeometry args={[RADIUS, 128, 128]} />
         <meshStandardMaterial
           color="#0a1a3a"
           emissive="#0b2050"
-          emissiveIntensity={0.6}
-          roughness={0.4}
-          metalness={0.2}
+          emissiveIntensity={0.5}
+          roughness={0.5}
+          metalness={0.15}
         />
       </mesh>
-      {/* Glowing wireframe shell */}
+      {/* Subtle wireframe overlay */}
       <mesh>
-        <sphereGeometry args={[RADIUS * 1.001, 48, 48]} />
-        <meshBasicMaterial color="#00d4ff" wireframe transparent opacity={0.22} />
+        <sphereGeometry args={[RADIUS * 1.001, 64, 64]} />
+        <meshBasicMaterial color="#00d4ff" wireframe transparent opacity={0.12} />
       </mesh>
-      {/* Atmospheric glow */}
+      {/* Enhanced atmospheric glow */}
       <mesh>
-        <sphereGeometry args={[RADIUS * 1.08, 48, 48]} />
-        <meshBasicMaterial color="#00f0ff" transparent opacity={0.06} side={THREE.BackSide} />
+        <sphereGeometry args={[RADIUS * 1.08, 64, 64]} />
+        <meshBasicMaterial color="#00f0ff" transparent opacity={0.08} side={THREE.BackSide} />
       </mesh>
       <mesh>
         <sphereGeometry args={[RADIUS * 1.16, 48, 48]} />
-        <meshBasicMaterial color="#3b82f6" transparent opacity={0.04} side={THREE.BackSide} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.06} side={THREE.BackSide} />
       </mesh>
 
       <CityPoints />
