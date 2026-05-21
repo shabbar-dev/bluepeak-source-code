@@ -13,7 +13,7 @@ import { toast } from "sonner";
 const contactSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
-  product: z.string().min(1, "Please select a product interest"),
+  product: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters")
 });
 
@@ -28,11 +28,41 @@ export function Contact() {
     }
   });
 
-  function onSubmit(values: z.infer<typeof contactSchema>) {
-    toast.success("Inquiry Submitted Successfully", {
-      description: "Our trade team will contact you within 24 hours."
-    });
-    form.reset();
+  async function onSubmit(values: z.infer<typeof contactSchema>) {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "https://dmevuljxxi4h0.cloudfront.net";
+    const toEmail = import.meta.env.VITE_CONTACT_TO_EMAIL || "sharein4950@gmail.com";
+    const projectName = import.meta.env.VITE_PROJECT_NAME || "Bluepeak Production Test";
+
+    try {
+      const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to_email: toEmail,
+          name: values.name,
+          email: values.email,
+          message: values.message,
+          product: values.product || undefined,
+          project_name: projectName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      toast.success("Inquiry Submitted Successfully", {
+        description: "Our trade team will contact you within 24 hours."
+      });
+      form.reset();
+    } catch (error) {
+      console.error("Failed to send inquiry:", error);
+      toast.error("Submission Failed", {
+        description: "There was a problem submitting your inquiry. Please try again."
+      });
+    }
   }
 
   return (
@@ -48,7 +78,7 @@ export function Contact() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-2xl mx-auto bg-white/5 border border-white/10 p-8 md:p-12 rounded-3xl backdrop-blur-xl shadow-2xl">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-3">Initiate <span className="text-primary">Dialogue</span></h2>
+            <h2 className="text-3xl font-bold mb-3">Get In <span className="text-primary">Touch</span></h2>
             <p className="text-white/60">Request a quote or discuss wholesale partnerships.</p>
           </div>
 
@@ -73,7 +103,7 @@ export function Contact() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white/80">Corporate Email</FormLabel>
+                      <FormLabel className="text-white/80">Email</FormLabel>
                       <FormControl>
                         <Input placeholder="john@company.com" className="bg-background/50 border-white/10 focus:border-primary/50" {...field} />
                       </FormControl>
@@ -88,7 +118,7 @@ export function Contact() {
                 name="product"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Product Interest</FormLabel>
+                    <FormLabel className="text-white/80">Product Interest <span className="text-white/40 text-sm">(Optional)</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-background/50 border-white/10 focus:border-primary/50">
@@ -100,6 +130,7 @@ export function Contact() {
                         <SelectItem value="leather">Leather Goods</SelectItem>
                         <SelectItem value="textiles">Textiles & Garments</SelectItem>
                         <SelectItem value="chemicals">Chemicals & Solvents</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -125,8 +156,12 @@ export function Contact() {
                 )}
               />
 
-              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(0,240,255,0.3)]">
-                Submit Inquiry
+              <Button 
+                type="submit" 
+                disabled={form.formState.isSubmitting}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(0,240,255,0.3)] disabled:opacity-50"
+              >
+                {form.formState.isSubmitting ? "Sending Inquiry..." : "Submit Inquiry"}
               </Button>
             </form>
           </Form>
