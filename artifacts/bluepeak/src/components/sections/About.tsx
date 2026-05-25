@@ -37,7 +37,7 @@ export function About() {
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
             {stats.map((stat, idx) => (
               <motion.div
                 key={idx}
@@ -45,12 +45,12 @@ export function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm hover:border-primary/50 transition-colors group relative overflow-hidden"
+                className="bg-white/5 border border-white/10 p-4 sm:p-6 rounded-2xl backdrop-blur-sm hover:border-primary/50 transition-colors group relative overflow-hidden min-w-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <stat.icon className="w-8 h-8 text-primary mb-4" />
-                <div className="text-4xl font-bold text-white mb-2">{stat.value}</div>
-                <div className="text-sm font-medium text-white/60 uppercase tracking-wider">{stat.label}</div>
+                <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4 shrink-0" />
+                <div className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2 truncate">{stat.value}</div>
+                <div className="text-xs sm:text-sm font-medium text-white/60 uppercase tracking-wider leading-tight sm:leading-normal">{stat.label}</div>
               </motion.div>
             ))}
           </div>
