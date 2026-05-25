@@ -1,6 +1,6 @@
 import { useRef, useMemo, Suspense, Component, useState, useEffect, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars, Line } from "@react-three/drei";
+import { OrbitControls, Stars, Line, useTexture } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
 import * as THREE from "three";
 
@@ -38,7 +38,7 @@ function GlobeFallback() {
 const RADIUS = 2;
 
 const CITIES: { name: string; lat: number; lon: number }[] = [
-  { name: "Mumbai", lat: 19.07, lon: 72.87 },
+  { name: "Chennai", lat: 13.0827, lon: 80.2707 },
   { name: "Singapore", lat: 1.35, lon: 103.82 },
   { name: "Rotterdam", lat: 51.92, lon: 4.48 },
   { name: "New York", lat: 40.71, lon: -74.0 },
@@ -126,66 +126,58 @@ function CityPoints() {
 
 function ArcLine({ points, color }: { points: THREE.Vector3[]; color: string }) {
   return (
-    <Line points={points} color={color} lineWidth={1.2} transparent opacity={0.45} />
+    <Line 
+      points={points} 
+      color={color} 
+      lineWidth={1.5} 
+      transparent 
+      opacity={0.5} 
+      blending={THREE.AdditiveBlending}
+      depthWrite={false}
+    />
   );
 }
 
-function PlaneIcon() {
+function SimplePlane({ color }: { color: string }) {
   return (
-    <group>
-      {/* fuselage */}
-      <mesh rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.018, 0.018, 0.16, 8]} />
-        <meshStandardMaterial color="#ffffff" emissive="#aee9ff" emissiveIntensity={0.8} />
-      </mesh>
-      {/* wings */}
+    <group rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
-        <boxGeometry args={[0.04, 0.005, 0.18]} />
-        <meshStandardMaterial color="#ffffff" emissive="#aee9ff" emissiveIntensity={0.6} />
+        <coneGeometry args={[0.015, 0.05, 3]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      {/* tail */}
-      <mesh position={[-0.07, 0.025, 0]}>
-        <boxGeometry args={[0.025, 0.05, 0.005]} />
-        <meshStandardMaterial color="#ffffff" emissive="#aee9ff" emissiveIntensity={0.6} />
+      <mesh>
+        <coneGeometry args={[0.025, 0.06, 3]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
     </group>
   );
 }
 
-function ShipIcon() {
+function SimpleShip({ color }: { color: string }) {
   return (
     <group>
-      {/* hull */}
       <mesh>
-        <boxGeometry args={[0.18, 0.04, 0.06]} />
-        <meshStandardMaterial color="#0fd4ff" emissive="#0fd4ff" emissiveIntensity={0.5} />
+        <boxGeometry args={[0.015, 0.01, 0.05]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      {/* container stack */}
-      <mesh position={[0, 0.04, 0]}>
-        <boxGeometry args={[0.12, 0.035, 0.05]} />
-        <meshStandardMaterial color="#7c5cff" emissive="#7c5cff" emissiveIntensity={0.5} />
-      </mesh>
-      {/* bridge */}
-      <mesh position={[-0.07, 0.07, 0]}>
-        <boxGeometry args={[0.03, 0.03, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.4} />
+      <mesh>
+        <boxGeometry args={[0.025, 0.02, 0.06]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
     </group>
   );
 }
 
-function TruckIcon() {
+function SimpleTruck({ color }: { color: string }) {
   return (
     <group>
-      {/* trailer */}
-      <mesh position={[0.02, 0, 0]}>
-        <boxGeometry args={[0.12, 0.05, 0.05]} />
-        <meshStandardMaterial color="#ffffff" emissive="#aee9ff" emissiveIntensity={0.5} />
+      <mesh>
+        <boxGeometry args={[0.012, 0.012, 0.025]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      {/* cab */}
-      <mesh position={[-0.07, -0.005, 0]}>
-        <boxGeometry args={[0.05, 0.04, 0.05]} />
-        <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={0.6} />
+      <mesh>
+        <boxGeometry args={[0.02, 0.02, 0.035]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
     </group>
   );
@@ -214,13 +206,13 @@ function MovingTransport({
     const b = points[Math.min(i + 1, points.length - 1)];
     const pos = new THREE.Vector3().lerpVectors(a, b, f);
 
-    // Surface-hugging offset for ships/trucks; planes ride higher arcs already
+    // Surface-hugging offset
     const normal = pos.clone().normalize();
     pos.add(normal.clone().multiplyScalar(surfaceOffset));
 
     ref.current.position.copy(pos);
 
-    // Orient along travel direction, with "up" pointing away from globe center
+    // Orient along travel direction
     const tangent = b.clone().sub(a).normalize();
     const up = pos.clone().normalize();
     const m = new THREE.Matrix4();
@@ -228,21 +220,34 @@ function MovingTransport({
     ref.current.quaternion.setFromRotationMatrix(m);
   });
 
+  const color = kind === "plane" ? "#aee9ff" : kind === "ship" ? "#00f0ff" : "#7c5cff";
+
   return (
     <group ref={ref}>
-      {kind === "plane" && <PlaneIcon />}
-      {kind === "ship" && <ShipIcon />}
-      {kind === "truck" && <TruckIcon />}
+      {kind === "plane" && <SimplePlane color={color} />}
+      {kind === "ship" && <SimpleShip color={color} />}
+      {kind === "truck" && <SimpleTruck color={color} />}
     </group>
   );
 }
 
 function Globe() {
   const groupRef = useRef<THREE.Group>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
+  
+  const [colorMap, specularMap, normalMap, cloudsMap] = useTexture([
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png'
+  ]);
   
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.0015;
+    }
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += 0.0018;
     }
   });
 
@@ -261,21 +266,28 @@ function Globe() {
 
   return (
     <group ref={groupRef}>
-      {/* Filled globe surface */}
+      {/* Realistic globe surface */}
       <mesh>
-        <sphereGeometry args={[RADIUS, 128, 128]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          emissive="#0b2050"
-          emissiveIntensity={0.5}
-          roughness={0.5}
-          metalness={0.15}
+        <sphereGeometry args={[RADIUS, 64, 64]} />
+        <meshPhongMaterial
+          map={colorMap}
+          specularMap={specularMap}
+          normalMap={normalMap}
+          specular={new THREE.Color(0x333333)}
+          shininess={15}
         />
       </mesh>
-      {/* Subtle wireframe overlay */}
-      <mesh>
-        <sphereGeometry args={[RADIUS * 1.001, 64, 64]} />
-        <meshBasicMaterial color="#00d4ff" wireframe transparent opacity={0.12} />
+      {/* Clouds */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[RADIUS * 1.01, 64, 64]} />
+        <meshPhongMaterial
+          map={cloudsMap}
+          transparent={true}
+          opacity={0.4}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
       </mesh>
       {/* Enhanced atmospheric glow */}
       <mesh>
@@ -317,6 +329,7 @@ function ResponsiveCamera() {
     else if (size.width < 768) z = 7.0;
     if (aspect < 0.7) z += 0.8;
     camera.position.set(0, 0, z);
+    camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
   return null;
@@ -341,13 +354,14 @@ export function Hero() {
             <Suspense fallback={<GlobeFallback />}>
               <Canvas camera={{ position: [0, 0, 6.5], fov: 45 }} dpr={[1, 2]} className={isMobile ? 'pointer-events-none' : ''}>
                 <ResponsiveCamera />
-                <ambientLight intensity={0.65} />
+                <ambientLight intensity={1.2} />
                 <pointLight position={[10, 10, 10]} intensity={1.2} color="#00f0ff" />
-                <pointLight position={[-10, -6, -8]} intensity={0.8} color="#7c5cff" />
+                <pointLight position={[-10, 10, 10]} intensity={1.0} color="#7c5cff" />
+                <pointLight position={[0, -10, -10]} intensity={0.5} color="#ffffff" />
                 <Stars radius={120} depth={60} count={3500} factor={4} saturation={0} fade speed={1} />
                 <Globe />
                 {!isMobile && (
-                  <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.3} />
+                  <OrbitControls enableZoom={false} enablePan={true} minDistance={3} maxDistance={15} autoRotate autoRotateSpeed={0.3} />
                 )}
               </Canvas>
             </Suspense>
@@ -356,7 +370,7 @@ export function Hero() {
       </div>
 
       {/* Soft vignette so text stays readable */}
-      <div className="absolute left-0 right-0 bottom-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_at_left,_rgba(2,8,19,0.85),_transparent_60%)]" style={{ top: '80px' }} />      
+      <div className={`absolute left-0 right-0 bottom-0 z-[1] pointer-events-none ${isMobile ? 'bg-[radial-gradient(ellipse_at_center,_rgba(2,8,19,0.85),_transparent_75%)]' : 'bg-[radial-gradient(ellipse_at_left,_rgba(2,8,19,0.85),_transparent_60%)]'}`} style={{ top: '80px' }} />      
       {/* Mobile touch restriction overlay - blocks pointer events on top/bottom */}
       {isMobile && (
         <>
@@ -365,7 +379,7 @@ export function Hero() {
         </>
       )}
       <div className="container relative z-10 mx-auto px-4 pointer-events-none">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl mx-auto md:mx-0 flex flex-col md:block items-center text-center md:text-left">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]">
             Connecting Global <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
@@ -375,7 +389,7 @@ export function Hero() {
           <p className="text-base sm:text-xl text-white/70 mb-10 max-w-xl leading-relaxed">
             Trusted export partner across Agri, Leather, Textile & Chemical sectors. We deliver excellence to every corner of the world.
           </p>
-          <div className="flex flex-wrap items-center gap-4 pointer-events-auto">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pointer-events-auto">
             {/* <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(0,240,255,0.4)]">
               Explore Products
             </Button> */}
